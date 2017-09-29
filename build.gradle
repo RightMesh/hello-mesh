@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-project.ext.set("artifactory_app_username", "insertyourusername")
-project.ext.set("artifactory_app_password","insertyourpasswordhash")
-project.ext.set("artifactory_app_key", "insertyourkey")
+project.ext.set("artifactory_app_username", "fractalic")
+project.ext.set("artifactory_app_password","c6a78a16f29053534e6b313736873b46")
+project.ext.set("artifactory_app_key", "0x41e51067514537ab11ea286f0fa143a3682a4df5")
 
 buildscript {
     repositories {
