@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -26,8 +27,6 @@ import static io.left.rightmesh.mesh.MeshManager.DATA_RECEIVED;
 import static io.left.rightmesh.mesh.MeshManager.PEER_CHANGED;
 import static io.left.rightmesh.mesh.MeshManager.REMOVED;
 
-import io.left.hellomesh.MainHeader;
-
 public class MainActivity extends Activity implements MeshStateListener {
     // Port to bind app to.
     private static final int HELLO_PORT = 9876;
@@ -37,8 +36,8 @@ public class MainActivity extends Activity implements MeshStateListener {
 
     // Set to keep track of peers connected to the mesh.
     HashSet<MeshID> users = new HashSet<>();
+    HashMap<MeshID, String> usernames = new HashMap<MeshID, String>();
 
-    MainHeader mainHeader = null;
 
     /**
      * Called when app first opens, initializes {@link AndroidMeshManager} reference (which will
@@ -52,7 +51,6 @@ public class MainActivity extends Activity implements MeshStateListener {
         setContentView(R.layout.activity_main);
 
         mm = AndroidMeshManager.getInstance(MainActivity.this, MainActivity.this);
-        mainHeader = new MainHeader(generateRandomName(), mm.getUuid());
     }
 
     /**
@@ -140,9 +138,12 @@ public class MainActivity extends Activity implements MeshStateListener {
      * Update the {@link TextView} with a list of all peers.
      */
     private void updateStatus() {
-        String status = "uuid: " + mm.getUuid().toString() + "\npeers:\n";
-        for (MeshID user : users) {
-            status += user.toString() + "\n";
+        String status = "username: " + hashUuid(mm.getUuid()) + "\n\npeers:\n";
+
+        putHashMap();
+
+        for (String username : usernames.values()) {
+            status += username + "\n";
         }
         TextView txtStatus = (TextView) findViewById(R.id.txtStatus);
         txtStatus.setText(status);
@@ -201,11 +202,21 @@ public class MainActivity extends Activity implements MeshStateListener {
      */
     public void sendHello(View v) throws RightMeshException {
         for(MeshID receiver : users) {
-            String msg = "Hello to: " + receiver + " from" + mainHeader.getName();
+            String userReceiver = hashUuid(receiver);
+            String msg = "Hello to: " + userReceiver + " from " + hashUuid(mm.getUuid());
             MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
             byte[] testData = msg.getBytes();
             mm.sendDataReliable(receiver, HELLO_PORT, testData);
         }
+    }
+
+    //
+
+    public void sendOne(View v, String message, MeshID recpMshId) throws RightMeshException {
+        String username = hashUuid(recpMshId);
+        MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
+        byte[] testData = message.getBytes();
+        mm.sendDataReliable(recpMshId, HELLO_PORT, testData);
     }
 
     /**
@@ -224,13 +235,16 @@ public class MainActivity extends Activity implements MeshStateListener {
 
     //
 
-    public String generateRandomName() {
-        Random rand = new Random();
+    public void putHashMap() {
+        for (MeshID user : users) {
+            usernames.put(user, hashUuid(user));
+        }
+    }
 
-        int n = rand.nextInt(50) + 1;
-        String intg = Integer.toString(n);
-        String user = "user" + intg;
-        return user;
+    public String hashUuid(MeshID id) {
+        String castedId = id.toString();
+        String shortenedName = castedId.substring(0, 5);
+        return "user" + shortenedName;
     }
 }
 
