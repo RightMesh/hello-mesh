@@ -6,13 +6,15 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
 
 import io.left.rightmesh.android.AndroidMeshManager;
 import io.left.rightmesh.android.MeshService;
@@ -29,7 +31,7 @@ import static io.left.rightmesh.mesh.MeshManager.REMOVED;
 
 public class MainActivity extends Activity implements MeshStateListener {
     // Port to bind app to.
-    private static final int HELLO_PORT = 2000;
+    private static final int HELLO_PORT = 9876;
 
     // MeshManager instance - interface to the mesh network.
     AndroidMeshManager mm = null;
@@ -37,6 +39,8 @@ public class MainActivity extends Activity implements MeshStateListener {
     // Set to keep track of peers connected to the mesh.
     HashSet<MeshID> users = new HashSet<>();
     HashMap<MeshID, String> usernames = new HashMap<MeshID, String>();
+
+    private ListView mListView;
 
 
     /**
@@ -51,6 +55,10 @@ public class MainActivity extends Activity implements MeshStateListener {
         setContentView(R.layout.activity_main);
 
         mm = AndroidMeshManager.getInstance(MainActivity.this, MainActivity.this);
+
+        // list view
+
+        mListView = (ListView) findViewById(R.id.recipe_list_view);
     }
 
     /**
@@ -138,13 +146,24 @@ public class MainActivity extends Activity implements MeshStateListener {
      * Update the {@link TextView} with a list of all peers.
      */
     private void updateStatus() {
-        String status = "username: " + hashUuid(mm.getUuid()) + "\n\npeers:\n";
+        String status = "username: " + hashUuid(mm.getUuid()) + "\n\n\npeers:\n";
 
         putHashMap();
 
-        for (String username : usernames.values()) {
-            status += username + "\n";
+        Object[] values = usernames.values().toArray();
+
+        final ArrayList<String> recipeList = new ArrayList<String>();
+        for (Object i: values) {
+            recipeList.add(i.toString());
         }
+
+        String[] listItems = new String[recipeList.size()];
+        for(int i = 0; i < recipeList.size(); i++){
+            listItems[i] = recipeList.get(i);
+        }
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, listItems);
+        mListView.setAdapter(adapter);
+
         TextView txtStatus = (TextView) findViewById(R.id.txtStatus);
         txtStatus.setText(status);
     }
@@ -207,19 +226,20 @@ public class MainActivity extends Activity implements MeshStateListener {
             String msg = "Hello to: " + userReceiver + " from " + hashUuid(mm.getUuid());
             MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
             byte[] testData = msg.getBytes();
-            while (count > 0) {
-                try {
-                    count--;
-                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
-                    break;
-                } catch (Exception e) {
-                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
-                    if (count == 0) {
-                        System.out.println("Could not send message.");
-                    }
-
-                }
-            }
+            mm.sendDataReliable(receiver, HELLO_PORT, testData);
+//            while (count > 0) {
+//                try {
+//                    count--;
+//                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
+//                    break;
+//                } catch (Exception e) {
+//                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
+//                    if (count == 0) {
+//                        System.out.println("Could not send message.");
+//                    }
+//
+//                }
+//            }
 
         }
 
