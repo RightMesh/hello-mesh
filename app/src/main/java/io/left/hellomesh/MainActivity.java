@@ -29,7 +29,7 @@ import static io.left.rightmesh.mesh.MeshManager.REMOVED;
 
 public class MainActivity extends Activity implements MeshStateListener {
     // Port to bind app to.
-    private static final int HELLO_PORT = 9876;
+    private static final int HELLO_PORT = 2000;
 
     // MeshManager instance - interface to the mesh network.
     AndroidMeshManager mm = null;
@@ -201,23 +201,38 @@ public class MainActivity extends Activity implements MeshStateListener {
      * @param v calling view
      */
     public void sendHello(View v) throws RightMeshException {
+        int count = 3;
         for(MeshID receiver : users) {
             String userReceiver = hashUuid(receiver);
             String msg = "Hello to: " + userReceiver + " from " + hashUuid(mm.getUuid());
             MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
             byte[] testData = msg.getBytes();
-            mm.sendDataReliable(receiver, HELLO_PORT, testData);
+            while (count > 0) {
+                try {
+                    count--;
+                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
+                    break;
+                } catch (Exception e) {
+                    mm.sendDataReliable(receiver, HELLO_PORT, testData);
+                    if (count == 0) {
+                        System.out.println("Could not send message.");
+                    }
+
+                }
+            }
+
         }
+
     }
 
     //
 
-    public void sendOne(View v, String message, MeshID recpMshId) throws RightMeshException {
-        String username = hashUuid(recpMshId);
-        MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
-        byte[] testData = message.getBytes();
-        mm.sendDataReliable(recpMshId, HELLO_PORT, testData);
-    }
+//    public void sendOne(View v, String message, MeshID recpMshId) throws RightMeshException {
+//        String username = hashUuid(recpMshId);
+//        MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
+//        byte[] testData = message.getBytes();
+//        mm.sendDataReliable(re, HELLO_PORT, testData);
+//    }
 
     /**
      * Open mesh settings screen.
