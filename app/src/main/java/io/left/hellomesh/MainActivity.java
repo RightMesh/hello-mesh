@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
+import java.util.Random;
 
 import io.left.rightmesh.android.AndroidMeshManager;
 import io.left.rightmesh.android.MeshService;
@@ -25,6 +26,8 @@ import static io.left.rightmesh.mesh.MeshManager.DATA_RECEIVED;
 import static io.left.rightmesh.mesh.MeshManager.PEER_CHANGED;
 import static io.left.rightmesh.mesh.MeshManager.REMOVED;
 
+import io.left.hellomesh.MainHeader;
+
 public class MainActivity extends Activity implements MeshStateListener {
     // Port to bind app to.
     private static final int HELLO_PORT = 9876;
@@ -34,6 +37,8 @@ public class MainActivity extends Activity implements MeshStateListener {
 
     // Set to keep track of peers connected to the mesh.
     HashSet<MeshID> users = new HashSet<>();
+
+    MainHeader mainHeader = null;
 
     /**
      * Called when app first opens, initializes {@link AndroidMeshManager} reference (which will
@@ -47,6 +52,7 @@ public class MainActivity extends Activity implements MeshStateListener {
         setContentView(R.layout.activity_main);
 
         mm = AndroidMeshManager.getInstance(MainActivity.this, MainActivity.this);
+        mainHeader = new MainHeader(generateRandomName(), mm.getUuid());
     }
 
     /**
@@ -195,7 +201,7 @@ public class MainActivity extends Activity implements MeshStateListener {
      */
     public void sendHello(View v) throws RightMeshException {
         for(MeshID receiver : users) {
-            String msg = "Hello to: " + receiver + " from" + mm.getUuid();
+            String msg = "Hello to: " + receiver + " from" + mainHeader.getName();
             MeshUtility.Log(this.getClass().getCanonicalName(), "MSG: " + msg);
             byte[] testData = msg.getBytes();
             mm.sendDataReliable(receiver, HELLO_PORT, testData);
@@ -214,6 +220,17 @@ public class MainActivity extends Activity implements MeshStateListener {
         } catch(RightMeshException ex) {
             MeshUtility.Log(this.getClass().getCanonicalName(), "Service not connected");
         }
+    }
+
+    //
+
+    public String generateRandomName() {
+        Random rand = new Random();
+
+        int n = rand.nextInt(50) + 1;
+        String intg = Integer.toString(n);
+        String user = "user" + intg;
+        return user;
     }
 }
 
